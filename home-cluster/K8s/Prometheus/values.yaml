@@ -1,0 +1,103 @@
+kube-prometheus-stack:
+  namespaceOverride: monitoring
+  prometheus:
+    prometheusSpec:
+      storageSpec:
+        volumeClaimTemplate:
+          spec: 
+            storageClassName: local-path
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 10Gi
+      retention: 120d
+      retentionSize: 10GB
+      additionalScrapeConfigs:
+        - job_name: "pod-scraper"
+          kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - monitoring
+          relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: pod
+    nodeSelector:
+      name: pi2
+    service:
+      type: LoadBalancer
+      loadBalancerIP: 192.168.0.58
+  prometheusOperator:
+    nodeSelector:
+      name: pi2
+  grafana:
+    persistence:
+      enabled: true
+      type: sts
+      storageClassName: "local-path"
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi
+    namespaceOverride: monitoring
+    enabled: true
+    nodeSelector:
+      name: pi2
+    service:
+      type: LoadBalancer
+      loadBalancerIP: 192.168.0.57
+  alertmanager:
+    enabled: true
+  defaultRules:
+    create: false
+    alertmanager: false
+    etcd: false
+    configReloaders: false
+    general: false
+    k8sContainerCpuUsageSecondsTotal: false
+    k8sContainerMemoryCache: false
+    k8sContainerMemoryRss: false
+    k8sContainerMemorySwap: false
+    k8sContainerResource: false
+    k8sContainerMemoryWorkingSetBytes: false
+    k8sPodOwner: false
+    kubeApiserverAvailability: false
+    kubeApiserverBurnrate: false
+    kubeApiserverHistogram: false
+    kubeApiserverSlos: false
+    kubeControllerManager: false
+    kubelet: false
+    kubeProxy: false
+    kubePrometheusGeneral: false
+    kubePrometheusNodeRecording: false
+    kubernetesApps: false
+    kubernetesResources: false
+    kubernetesStorage: false
+    kubernetesSystem: false
+    kubeSchedulerAlerting: false
+    kubeSchedulerRecording: false
+    kubeStateMetrics: false
+    network: false
+    node: false
+    nodeExporterAlerting: false
+    nodeExporterRecording: false
+    prometheus: false
+    prometheusOperator: false
+    windows: false

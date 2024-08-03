@@ -1,0 +1,4 @@
+**/*.exe
+**/*secrets.yaml
+**/Chart.lock
+**/charts
