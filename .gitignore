@@ -1,0 +1,3 @@
+**/*.exe
+**/Chart.lock
+**/charts
